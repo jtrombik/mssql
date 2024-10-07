@@ -1,0 +1,18 @@
+-- Pred shrinkem nutno zalohovat transakcni logy, nekdy i vicekrat
+BACKUP LOG [ELDAX_OAIS] TO  DISK = N'F:\MSSQL15.ELDAX\MSSQL\Backup\ELDAX_OAIS_20240226_1.trn' WITH NAME = N'ELDAX_OAIS-Log Transaction', COMPRESSION, STATS = 1
+GO
+
+-- Ukaze session, co bezi, od kdy a do kdy (treba visici backup, ci jak dlouho bude trvat)
+SELECT session_id as SPID, command, a.text AS Query, start_time, percent_complete, dateadd(second,estimated_completion_time/1000, getdate()) as estimated_completion_time
+FROM sys.dm_exec_requests r CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) a
+
+
+-- Shrink transakcniho logu (po zaloze)
+USE [ELDAX_OAIS]
+DBCC SHRINKFILE (N'ELDAX_7_6_log' , 1000)
+GO
+
+-- Velikost (alokovana) a zaplneni transakcnich logu
+DBCC SQLPERF(logspace)
+GO
+
